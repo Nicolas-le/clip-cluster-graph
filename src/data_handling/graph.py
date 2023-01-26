@@ -17,8 +17,16 @@ class ClusterGraph():
     def transform_data(self):
 
         clusters = list(self.frames_with_clusters['cluster'].unique())
+        videos = list(self.frames_with_clusters['video_id'].unique())
+
         self.frames_with_clusters = self.frames_with_clusters.drop(columns=["Unnamed: 0.1","Unnamed: 0", "timestamp"])
-        self.frames_with_clusters = self.frames_with_clusters.drop_duplicates()
+
+        for video_id in videos:
+            cluster_counts = self.frames_with_clusters[self.frames_with_clusters["video_id"] == video_id].value_counts()
+        
+            for identifier, count in cluster_counts.items():
+                if count < 50:
+                    self.frames_with_clusters = self.frames_with_clusters.drop(self.frames_with_clusters[(self.frames_with_clusters.video_id == identifier[0]) & (self.frames_with_clusters.cluster == identifier[1])].index)
 
         cluster_videos_listing = defaultdict(list)
 
@@ -56,9 +64,8 @@ class ClusterGraph():
         return normalized_list
 
     def create_networkx_graph(self):
-        graph = nx.DiGraph()
+        graph = nx.Graph()
         e = self.listOfEdges
-        print(e)
         graph.add_weighted_edges_from(e)
 
         return graph
@@ -73,8 +80,6 @@ class ClusterGraph():
 
 
 g = ClusterGraph("./outputs/26_01_2023_12_46_22/clustered_data.csv")
-for cluster, pr in g.analytics["pagerank"].items():
-    print(cluster)
-    print(pr)
-    print()
-#print(g.networkx_graph)
+print(g.networkx_graph)
+print(sorted(g.analytics["pagerank"].items(), key=lambda x:x[0]))
+print(g.analytics["degreeC"])
