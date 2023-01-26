@@ -2,10 +2,8 @@ import pandas as pd
 import numpy as np
 import h5py
 from pathlib import Path
-
-def iterate_directory(main_path):
-    return Path(main_path).glob('*/')
-
+import logging
+logging.basicConfig(level=logging.INFO)
 
 def convert_h5py_to_dataframe(video_id,  file):
     # keys  = t,  y
@@ -26,11 +24,10 @@ def convert_h5py_to_dataframe(video_id,  file):
     
     return video_dataframe
 
-
-def get_embeddings(source_path):
-
-    for video_count, video_path in enumerate(Path(source_path).glob('*/')): 
-        print("Transforming video: {}".format(video_count))
+def get_embeddings(config):
+    
+    for video_count, video_path in enumerate(Path(config["data_source"]).glob('*/')): 
+        logging.info("Transforming video: {}".format(video_count))
 
         video_path = str(video_path).replace("\\","/")
         video_id = video_path.replace("resources/bildtv/","").replace("resources/compacttv/","").replace("resources/tagesschau/","")
@@ -43,8 +40,5 @@ def get_embeddings(source_path):
             video_df = convert_h5py_to_dataframe(video_id, file)
             source_df = pd.concat([source_df,video_df])
 
-    return source_df
+    source_df.to_csv("./resources/transformed_embeddings/" + config["source"] +".csv")
 
-bild_clip_df = get_embeddings("./resources/tagesschau/")
-#bild_clip_df.to_parquet("./resources/transformed_embeddings/bildtv.parquet.gzip",compression="gzip")
-bild_clip_df.to_csv("./resources/transformed_embeddings/tagesschau.csv")

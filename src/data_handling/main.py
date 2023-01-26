@@ -1,20 +1,53 @@
-import data_preprocessing as dp
-import pca 
-import clusterting as clust
-from graph_handler import ClusterGraph
 import pandas as pd
+import os
+from datetime import datetime
+import json
 
+import logging
+logging.basicConfig(level=logging.INFO)
 
-def create_cluster_graph(clip_path):
-    clip_embeddings  = dp.get_embeddings(clip_path)
+import data_preprocessing
+import pca
+import clustering
 
-    clip_embeddings_dim_reduces = pca.reduce_dimension(clip_embeddings)
-    frames_with_clusters = clust.attach_clusters(clip_embeddings_dim_reduces)
+def handle_config():
+    config = {
+        "source": "compacttv",
+        "data_source": "./resources/compacttv/",
+        "output_directory": "./outputs/" + datetime.now().strftime("%d_%m_%Y_%H_%M_%S") + "/",
+        "initial_transformation": True,
+        "principal_components": 20,
+        "k_means_config": {
+            "clusters": 25,
+            "n_init": 3,
+            "max_iter": 3000,
+            "random_state": 1
+        }
+    }
 
-    return ClusterGraph(frames_with_clusters)
+    os.mkdir(config["output_directory"])
+    with open(config["output_directory"]+"/config.json", 'w') as convert_file:
+        convert_file.write(json.dumps(config))
     
+    return config
 
 if __name__ == "__main__":
-    tagessschau_graph = create_cluster_graph("./resources/clips.hdf")
-    bild_graph = create_cluster_graph("./resources/clips.hdf")
-    compact_graph = create_cluster_graph("./resources/clips.hdf")
+    config = handle_config()
+
+    if config["initial_transformation"]:
+        logging.info("Data Transformation...")
+        data_preprocessing.get_embeddings(config)
+    
+    transformed_data_path = "./resources/transformed_embeddings/"+ config["source"] + ".csv"
+
+    logging.info("Start PCA...")
+    pca.pca_main(transformed_data_path, config)
+
+    logging.info("Start Clustering...")
+    clustering.k_means_clustering(config)
+
+
+    
+
+    
+
