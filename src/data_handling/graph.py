@@ -3,6 +3,10 @@ from networkx.algorithms import community
 from collections import defaultdict
 import pandas as pd
 from itertools import chain
+import data_postprocessing
+import os
+import json
+import numpy as np
 
 
 class ClusterGraph():
@@ -17,8 +21,8 @@ class ClusterGraph():
         self.community_resolution = community_resolution
         self.listOfEdges = self.transform_data()
         self.networkx_graph  = self.create_networkx_graph()
-        self.analytics = self.get_analytics()
-        self.communities = self.get_communities()
+        #self.analytics = self.get_analytics()
+        #self.communities = self.get_communities()
 
     def transform_data(self):
 
@@ -109,12 +113,36 @@ class ClusterGraph():
         resolution=self.community_resolution)
 
 
-g = ClusterGraph("./outputs/27_01_2023_07_29_03/clustered_data.csv",
-    low_cluster_filter = 10,
-    community_resolution = 2)
 
-print(g.networkx_graph)
-print(sorted(g.analytics["pagerank"].items(), key=lambda x:x[0]))
-#print(sorted(g.analytics["closenessC"].items(), key=lambda x:x[1]))
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
+g = ClusterGraph("./outputs/26_01_2023_12_56_19/clustered_data.csv",
+    low_cluster_filter = 10,
+    community_resolution = 1)
+
+with open('./outputs/26_01_2023_12_56_19/graph.json', 'w') as f:
+    json.dump(nx.node_link_data(g.networkx_graph), f, cls=NpEncoder)
+
+"""
+cluster_video_timestamp = pd.read_csv("./output/27_01_2023_07_53_00/clustered_data.csv")
+
 for comm in g.communities:
-    print(sorted(comm))
+    output_name = str(sorted(comm))
+    output_dir = "./resources/cluster_peak/"+output_name+"/"
+    os.mkdir(output_dir)
+    for cluster in sorted(comm):
+        data_postprocessing.show_images_cluster(cluster, cluster_video_timestamp, output_dir)
+
+"""
+
+
+
+

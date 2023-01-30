@@ -12,13 +12,13 @@ import clustering
 
 def handle_config():
     config = {
-        "source": "compacttv",
-        "data_source": "./resources/compacttv/",
+        "source": "tagesschau",
+        "data_source": "./resources/tagesschau/",
         "output_directory": "./outputs/" + datetime.now().strftime("%d_%m_%Y_%H_%M_%S") + "/",
-        "initial_transformation": True,
-        "principal_components": 20,
+        "initial_transformation": False,
+        "principal_components": 30,
         "k_means_config": {
-            "clusters": 25,
+            "clusters": 150,
             "n_init": 3,
             "max_iter": 3000,
             "random_state": 1
@@ -33,6 +33,8 @@ def handle_config():
 
 if __name__ == "__main__":
     config = handle_config()
+
+    logging.info(str(config))
 
     if config["initial_transformation"]:
         logging.info("Data Transformation...")
