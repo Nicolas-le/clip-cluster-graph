@@ -14,9 +14,11 @@ class ClusterGraph():
     def __init__(self,
     frames_with_clusters,
     low_cluster_filter,
-    community_resolution):
+    community_resolution,
+    edge_threshold=0.2):
 
         self.frames_with_clusters = pd.read_csv(frames_with_clusters)
+        self.edge_threshold  = edge_threshold
         self.low_cluster_filter = low_cluster_filter
         self.community_resolution = community_resolution
         self.listOfEdges = self.transform_data()
@@ -86,7 +88,7 @@ class ClusterGraph():
         normalized_list = []
         for edge in listOfEdges:
             norm_w = (edge[2]-minimum) / (maximum-minimum)
-            if norm_w == 0.0:
+            if norm_w == 0.0 or norm_w < self.edge_threshold:
                 continue
             normalized_list.append((edge[0],edge[1], norm_w))
 
@@ -95,6 +97,7 @@ class ClusterGraph():
     def create_networkx_graph(self):
         graph = nx.DiGraph()
         e = self.listOfEdges
+        graph.add_nodes_from(self.frames_with_clusters['cluster'].unique())
         graph.add_weighted_edges_from(e)
 
         return graph
@@ -112,8 +115,6 @@ class ClusterGraph():
         weight="weight",
         resolution=self.community_resolution)
 
-
-
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -124,24 +125,26 @@ class NpEncoder(json.JSONEncoder):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
-g = ClusterGraph("./outputs/26_01_2023_12_56_19/clustered_data.csv",
-    low_cluster_filter = 10,
-    community_resolution = 1)
+g = ClusterGraph("./outputs/27_01_2023_07_53_00/clustered_data.csv",
+    low_cluster_filter = 20,
+    community_resolution = 1,
+    edge_threshold=0.1
+    )
 
-with open('./outputs/26_01_2023_12_56_19/graph.json', 'w') as f:
+with open('./outputs/27_01_2023_07_53_00/graph.json', 'w') as f:
     json.dump(nx.node_link_data(g.networkx_graph), f, cls=NpEncoder)
 
-"""
-cluster_video_timestamp = pd.read_csv("./output/27_01_2023_07_53_00/clustered_data.csv")
+
+cluster_video_timestamp = pd.read_csv("./outputs/27_01_2023_07_53_00/clustered_data.csv"
 
 for comm in g.communities:
     output_name = str(sorted(comm))
-    output_dir = "./resources/cluster_peak/"+output_name+"/"
+    output_dir = "./src/app/clusters/"+output_name+"/"
     os.mkdir(output_dir)
     for cluster in sorted(comm):
         data_postprocessing.show_images_cluster(cluster, cluster_video_timestamp, output_dir)
 
-"""
+
 
 
 

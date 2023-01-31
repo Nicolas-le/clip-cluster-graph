@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    graph = prepare_graph_data("./outputs/26_01_2023_12_56_19/graph.json")
+    graph = prepare_graph_data("./outputs/27_01_2023_07_53_00/graph.json")
     #print(graph)
     return render_template('graph.html', graph = graph)
 

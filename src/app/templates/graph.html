@@ -1,18 +1,37 @@
 <head>
-    <style> body { margin: 0; } </style>
-  
-    <script src="//unpkg.com/3d-force-graph-vr"></script>
-    <!--<script src="../../dist/3d-force-graph-vr.js"></script>-->
-  </head>
-  
-  <body>
-    <div id="3d-graph"></div>
-  
-    <script type="text/javascript">
-      var graph = {{graph |tojson| safe}};
+  <style> body { margin: 0; 
+  font-size: 100px;} 
+  </style>
 
-      const Graph = ForceGraphVR()
-        (document.getElementById('3d-graph'))
-          .graphData(graph);
-    </script>
-  </body>
+<script src="//unpkg.com/three"></script>
+
+  <script src="//unpkg.com/3d-force-graph"></script>
+  <!--<script src="../../dist/3d-force-graph.js"></script>-->
+</head>
+
+<body>
+  <div id="3d-graph"></div>
+
+    <script>
+      var gData = {{graph |tojson| safe}};
+
+      const Graph = ForceGraph3D()
+      (document.getElementById('3d-graph'))
+        .nodeThreeObject(({ id }) => {
+          const imgTexture = new THREE.TextureLoader().load(`C:/Users/ocin/Documents/university/fake_narratives/clip-cluster-graph/resources/clusters/${id}.jpg`);
+          const material = new THREE.SpriteMaterial({ map: imgTexture });
+          const sprite = new THREE.Sprite(material); 
+          sprite.scale.set(12, 12);
+          return sprite;
+        })
+        //.nodeLabel(node => node.id)
+        .linkWidth(link => ((link.weight*100)* (link.weight*100))/1000)
+        .linkOpacity(link => (1-link.weight)*(1-link.weight))
+        .graphData(gData);
+
+        const linkForce = Graph
+          .d3Force('link')
+          .distance(link => (((1-link.weight)*500)*((1-link.weight)*500))/1000);
+
+  </script>
+</body>

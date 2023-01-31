@@ -20,11 +20,21 @@ def show_images_cluster(cluster, cluster_video_timestamp, output_dir,  sample_si
                 if time["t"] == image["timestamp"]:
                     image_base64 = time["image"]
 
+            """
             with open(output_dir+"cluster"+str(cluster)+"_"+ str(random.randint(0,5000)) +".png", "wb") as fh:
                 fh.write(base64.b64decode(image_base64))
+            """
+            with open(output_dir+str(cluster)+".jpg", "wb") as fh:
+                fh.write(base64.b64decode(image_base64))
 
-#for i in range(1,len(cluster_video_timestamp['cluster'].unique())):
-#    show_images_cluster(i)
-#show_images_cluster(19, 100)
+"""
+for i in range(1,len(cluster_video_timestamp['cluster'].unique())):
+    show_images_cluster(i)
+"""
+
+cluster_video_timestamp = pd.read_csv("./outputs/27_01_2023_07_53_00/clustered_data.csv")
+
+for cluster in cluster_video_timestamp['cluster'].unique():
+    show_images_cluster(cluster, cluster_video_timestamp, "./src/app/clusters/", sample_size=1)
 
 
