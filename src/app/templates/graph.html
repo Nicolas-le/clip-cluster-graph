@@ -47,8 +47,6 @@
         var meshes = {};
 
         for (let i = 0; i < 10; i++) {
-          console.log(i);
-          console.log(yAxis);
           plan = new THREE.PlaneGeometry(25, 15, 1, 1);
           var map = new THREE.TextureLoader().load( `./static/clusters/${id.id}_${i}.jpg`);
           var material = new THREE.MeshBasicMaterial( { map: map } );
@@ -57,8 +55,6 @@
         }
 
         for(var p in meshes){
-          console.log(p);
-          console.log(meshes[p]);
           Graph.camera().add(meshes[p]);
           meshes[p].position.set(xAxis,yAxis,-100);
           yAxis -= 17;
@@ -69,11 +65,10 @@
           }
         }
 
-
       }
 
       function removeDisplay(){
-        Graph.camera().remove(mesh);
+        Graph.scene().remove(Graph.camera());
       }
 
 
