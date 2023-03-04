@@ -6,7 +6,6 @@ app = Flask(__name__)
 @app.route("/")
 def home():
     graph = prepare_graph_data("./outputs/27_01_2023_07_53_00/graph.json")
-    #print(graph)
     return render_template('graph.html', graph = graph)
 
 if __name__ == "__main__":

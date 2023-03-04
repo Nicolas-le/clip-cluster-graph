@@ -5,6 +5,9 @@
 
   <script src="//unpkg.com/3d-force-graph"></script>
   <!--<script src="../../dist/3d-force-graph.js"></script>-->
+  <style>
+    .clickable { cursor: unset !important }
+  </style>
 </head>
 
 <body>
@@ -13,9 +16,16 @@
     <script>
 
       var gData = {{graph |tojson| safe}};
-
+      
       const Graph = ForceGraph3D()
-      (document.getElementById('3d-graph'))
+        .graphData(gData)
+        .nodeLabel(node => node.id)
+        .linkWidth(link => ((link.weight*100)* (link.weight*100))/1000)
+        .linkOpacity(link => (1-link.weight)*(1-link.weight))
+        .onNodeClick(showClusterImages)
+        .onNodeRightClick(removeDisplay)
+
+        (document.getElementById('3d-graph'))
         .nodeThreeObject(({ id }) => {
           const imgTexture = new THREE.TextureLoader().load(`./static/clusters/${id}.jpg`);
         
@@ -23,16 +33,48 @@
           const sprite = new THREE.Sprite(material); 
           sprite.scale.set(25, 15);
           return sprite;
-        })
-        .nodeLabel(node => node.id)
-        .linkWidth(link => ((link.weight*100)* (link.weight*100))/1000)
-        .linkOpacity(link => (1-link.weight)*(1-link.weight))
-        .graphData(gData);
+        });
 
       const linkForce = Graph
         .d3Force('link')
         .distance(link => (((1-link.weight)*500)*((1-link.weight)*500))/1000);
 
+      function showClusterImages(id) {
+        var yAxis = 35;
+        var xAxis = 50;
+
+        Graph.scene().add(Graph.camera());
+        var meshes = {};
+
+        for (let i = 0; i < 10; i++) {
+          console.log(i);
+          console.log(yAxis);
+          plan = new THREE.PlaneGeometry(25, 15, 1, 1);
+          var map = new THREE.TextureLoader().load( `./static/clusters/${id.id}_${i}.jpg`);
+          var material = new THREE.MeshBasicMaterial( { map: map } );
+          const mesh = new THREE.Mesh(plan , material);
+          meshes[i] = mesh;
+        }
+
+        for(var p in meshes){
+          console.log(p);
+          console.log(meshes[p]);
+          Graph.camera().add(meshes[p]);
+          meshes[p].position.set(xAxis,yAxis,-100);
+          yAxis -= 17;
+
+          if (p == 4){
+            yAxis = 35;
+            xAxis = 76;
+          }
+        }
+
+
+      }
+
+      function removeDisplay(){
+        Graph.camera().remove(mesh);
+      }
 
 
   </script>
