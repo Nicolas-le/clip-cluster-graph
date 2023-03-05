@@ -37,6 +37,7 @@
         const visibleLinks = [];
         var start_id = id;
         var start = true;
+        var level = 0;
 
         console.log(start_id);
         console.log(start);
@@ -44,10 +45,11 @@
         (function traverseTree(node = nodesById[id]) {
           visibleNodes.push(node);
           if (!node.collapsed) return;
-          if (!start) {
+          if (!start && level == 2) {
             return;
           } else{
           start = false;
+          level += 1;
           }
 
           visibleLinks.push(...node.childLinks);
