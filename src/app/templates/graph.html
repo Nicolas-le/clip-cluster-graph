@@ -1,9 +1,9 @@
 <head>
   <style> body { margin: 0; } </style>
 
-<script src="//unpkg.com/three"></script>
-
+  <script src="//unpkg.com/three"></script>
   <script src="//unpkg.com/3d-force-graph"></script>
+  <script src="//unpkg.com/dat.gui"></script>
   <!--<script src="../../dist/3d-force-graph.js"></script>-->
   <style>
     .clickable { cursor: unset !important }
@@ -31,21 +31,18 @@
 
       var collap = false;
       var showImages = false;
+      var depth = 1;
 
       const getPrunedTree = (id) => {
         const visibleNodes = [];
         const visibleLinks = [];
-        var start_id = id;
-        var start = true;
+        console.log(visibleNodes);
         var level = 0;
-
-        console.log(start_id);
-        console.log(start);
+        var start = true;
         
         (function traverseTree(node = nodesById[id]) {
           visibleNodes.push(node);
-          if (!node.collapsed) return;
-          if (!start && level == 2) {
+          if (!start && level == depth) {
             return;
           } else{
           start = false;
@@ -53,7 +50,6 @@
           }
 
           visibleLinks.push(...node.childLinks);
-          console.log(visibleNodes);
           node.childLinks
             .map(link => ((typeof link.target) === 'object') ? link.target : nodesById[link.target]) 
             .forEach(traverseTree);
@@ -135,6 +131,22 @@
 
       function removeDisplay(){
         Graph.scene().remove(Graph.camera());
+      }
+
+      const Settings = function() {
+        this.pruneDepth = 1;
+      };
+
+      const settings = new Settings();
+      const gui = new dat.GUI();
+      const controllerOne = gui.add(settings, 'pruneDepth', 1, 2).step(1);
+
+      controllerOne.onChange(updateLinkDistance);
+
+      function updateLinkDistance() {
+        depth = settings.pruneDepth;
+        console.log(depth);
+        //Graph.numDimensions(3); // Re-heat simulation
       }
 
   </script>
