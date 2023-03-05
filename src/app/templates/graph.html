@@ -16,19 +16,83 @@
     <script>
 
       var gData = {{graph |tojson| safe}};
-      
+
+      for (const [key, value] of Object.entries(gData["nodes"])) {
+          value["childLinks"] = [];
+          value["collapsed"] = false;
+      }
+
+      const nodesById = Object.fromEntries(gData.nodes.map(node => [node.id, node]));
+      gData.links.forEach(link => {
+        nodesById[link.source].childLinks.push(link);
+      });
+
+      console.log(gData);
+
+      var collap = false;
+      var showImages = false;
+
+      const getPrunedTree = (id) => {
+        const visibleNodes = [];
+        const visibleLinks = [];
+        var start_id = id;
+        var start = true;
+
+        console.log(start_id);
+        console.log(start);
+        
+        (function traverseTree(node = nodesById[id]) {
+          visibleNodes.push(node);
+          if (!node.collapsed) return;
+          if (!start) {
+            return;
+          } else{
+          start = false;
+          }
+
+          visibleLinks.push(...node.childLinks);
+          console.log(visibleNodes);
+          node.childLinks
+            .map(link => ((typeof link.target) === 'object') ? link.target : nodesById[link.target]) 
+            .forEach(traverseTree);
+        })(); 
+        return { nodes: visibleNodes, links: visibleLinks };
+      };
+      const elem = document.getElementById('3d-graph');
+
       const Graph = ForceGraph3D()
         .graphData(gData)
         .nodeLabel(node => node.id)
         .linkWidth(link => ((link.weight*100)* (link.weight*100))/1000)
         .linkOpacity(link => (1-link.weight)*(1-link.weight))
-        .onNodeClick(showClusterImages)
-        .onNodeRightClick(removeDisplay)
+        .onNodeClick(node => {
+          if (!collap){
+            if (node.childLinks.length) {
+              node.collapsed = !node.collapsed; 
+              Graph.graphData(getPrunedTree(node.id));
+              collap = true;
+            }
+          } else {
+            Graph.graphData(gData);
+            collap = false;
+          }
+
+          })
+
+        .onNodeRightClick(node => {
+          if (!showImages) {
+            showClusterImages(node);
+            showImages = true;
+          } else {
+            removeDisplay(node);
+            showImages = false;
+          }
+        }
+          )
 
         (document.getElementById('3d-graph'))
         .nodeThreeObject(({ id }) => {
-          const imgTexture = new THREE.TextureLoader().load(`./static/clusters/${id}.jpg`);
-        
+          const imgTexture = new THREE.TextureLoader().load(`./static/clusters/${id}_0.jpg`);
           const material = new THREE.SpriteMaterial({ map: imgTexture });
           const sprite = new THREE.Sprite(material); 
           sprite.scale.set(25, 15);
@@ -70,7 +134,6 @@
       function removeDisplay(){
         Graph.scene().remove(Graph.camera());
       }
-
 
   </script>
 </body>
