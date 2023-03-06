@@ -27,8 +27,6 @@
         nodesById[link.source].childLinks.push(link);
       });
 
-      console.log(gData);
-
       var collap = false;
       var showImages = false;
       var depth = 1;
@@ -36,7 +34,6 @@
       const getPrunedTree = (id) => {
         const visibleNodes = [];
         const visibleLinks = [];
-        console.log(visibleNodes);
         var level = 0;
         var start = true;
         
@@ -74,9 +71,7 @@
             Graph.graphData(gData);
             collap = false;
           }
-
-          })
-
+        })
         .onNodeRightClick(node => {
           if (!showImages) {
             showClusterImages(node);
@@ -85,9 +80,7 @@
             removeDisplay(node);
             showImages = false;
           }
-        }
-          )
-
+        })
         (document.getElementById('3d-graph'))
         .nodeThreeObject(({ id }) => {
           const imgTexture = new THREE.TextureLoader().load(`./static/clusters/${id}_0.jpg`);
@@ -103,11 +96,11 @@
 
       function showClusterImages(id) {
         var yAxis = 35;
-        var xAxis = 50;
+        var xAxis = 41;
 
         Graph.scene().add(Graph.camera());
         var meshes = {};
-
+        
         for (let i = 0; i < 10; i++) {
           plan = new THREE.PlaneGeometry(25, 15, 1, 1);
           var map = new THREE.TextureLoader().load( `./static/clusters/${id.id}_${i}.jpg`);
@@ -123,7 +116,7 @@
 
           if (p == 4){
             yAxis = 35;
-            xAxis = 76;
+            xAxis = 68;
           }
         }
 
@@ -135,19 +128,45 @@
 
       const Settings = function() {
         this.pruneDepth = 1;
+        this.community0 = false;
       };
 
       const settings = new Settings();
       const gui = new dat.GUI();
       const controllerOne = gui.add(settings, 'pruneDepth', 1, 2).step(1);
+      const controllerTwo = gui.add(settings, 'community0');
 
-      controllerOne.onChange(updateLinkDistance);
+      controllerOne.onChange(updateDepth);
+      controllerTwo.onChange(showCommunity);
 
-      function updateLinkDistance() {
+      function updateDepth() {
         depth = settings.pruneDepth;
-        console.log(depth);
-        //Graph.numDimensions(3); // Re-heat simulation
       }
+
+      function showCommunity(){
+       
+        if (settings.community0){
+          var gDataComm = {{graph |tojson| safe}};
+          console.log(gDataComm["nodes"]);
+
+          for( var i = 0; i < gDataComm["nodes"].length; i++){ 
+            if (gDataComm["nodes"][i]["community"] !== 1) { 
+              gDataComm["nodes"].splice(i, 1); 
+            }
+          }
+
+          for( var i = 0; i < gDataComm["links"].length; i++){ 
+            if (gDataComm["links"][i]["source"]["community"] !== 1 || gDataComm["links"][i]["target"]["community"] !== 1) { 
+              gDataComm["links"].splice(i, 1); 
+            }
+          }
+          Graph.graphData(gDataComm);
+        } else {
+          Graph.graphData(gData);
+        }
+      }
+
+
 
   </script>
 </body>
