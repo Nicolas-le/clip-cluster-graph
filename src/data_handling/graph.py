@@ -3,10 +3,11 @@ from networkx.algorithms import community
 from collections import defaultdict
 import pandas as pd
 from itertools import chain
-import data_postprocessing
 import os
 import json
 import numpy as np
+import logging
+logging.basicConfig(level=logging.INFO)
 
 
 class ClusterGraph():
@@ -24,7 +25,7 @@ class ClusterGraph():
         self.listOfEdges = self.transform_data()
         self.networkx_graph  = self.create_networkx_graph()
         #self.analytics = self.get_analytics()
-        #self.communities = self.get_communities()
+        self.communities = self.get_communities()
 
     def transform_data(self):
 
@@ -111,9 +112,22 @@ class ClusterGraph():
         }
 
     def get_communities(self):
-        return community.greedy_modularity_communities(self.networkx_graph,
+        communities = community.greedy_modularity_communities(self.networkx_graph,
         weight="weight",
         resolution=self.community_resolution)
+
+        self.attach_communities_to_graph(communities)
+
+        return communities
+
+    def attach_communities_to_graph(self, communities):
+        for comm_number, nodes in enumerate(communities):
+            for node in nodes:
+                self.networkx_graph.nodes[node].update({"community": comm_number})
+
+    def save_to_json(self):
+        with open(data + "/graph_communities.json", "w") as f:
+            json.dump(nx.node_link_data(self.networkx_graph), f, cls=NpEncoder)
 
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -124,25 +138,16 @@ class NpEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
+    
+data = "./outputs/27_01_2023_07_53_00/"
 
-g = ClusterGraph("./outputs/27_01_2023_07_53_00/clustered_data.csv",
+g = ClusterGraph(data + "clustered_data.csv",
     low_cluster_filter = 20,
-    community_resolution = 1,
+    community_resolution = 1.2,
     edge_threshold=0.1
     )
 
-with open('./outputs/27_01_2023_07_53_00/graph.json', 'w') as f:
-    json.dump(nx.node_link_data(g.networkx_graph), f, cls=NpEncoder)
-
-
-cluster_video_timestamp = pd.read_csv("./outputs/27_01_2023_07_53_00/clustered_data.csv"
-
-for comm in g.communities:
-    output_name = str(sorted(comm))
-    output_dir = "./src/app/clusters/"+output_name+"/"
-    os.mkdir(output_dir)
-    for cluster in sorted(comm):
-        data_postprocessing.show_images_cluster(cluster, cluster_video_timestamp, output_dir)
+g.save_to_json()
 
 
 
