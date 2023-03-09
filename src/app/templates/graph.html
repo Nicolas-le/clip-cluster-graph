@@ -53,6 +53,26 @@
         })(); 
         return { nodes: visibleNodes, links: visibleLinks };
       };
+
+      const getCommunityTree = (community) => {
+        const visibleNodes = [];
+        const visibleLinks = [];
+        
+        for( var i = 0; i < gData["nodes"].length; i++){ 
+          console.log(gData["nodes"][i]["community"]);
+          if (gData["nodes"][i]["community"] == community){
+            visibleNodes.push(gData["nodes"][i]);
+          }
+        }
+
+        for( var i = 0; i < gData["links"].length; i++){ 
+            if (gData["links"][i]["source"]["community"] == community && gData["links"][i]["target"]["community"] == community) { 
+              visibleLinks.push(gData["links"][i]);
+            }
+          }
+        return { nodes: visibleNodes, links: visibleLinks };
+      };
+
       const elem = document.getElementById('3d-graph');
 
       const Graph = ForceGraph3D()
@@ -144,23 +164,8 @@
       }
 
       function showCommunity(){
-       
-        if (settings.community0){
-          var gDataComm = {{graph |tojson| safe}};
-          console.log(gDataComm["nodes"]);
-
-          for( var i = 0; i < gDataComm["nodes"].length; i++){ 
-            if (gDataComm["nodes"][i]["community"] !== 1) { 
-              gDataComm["nodes"].splice(i, 1); 
-            }
-          }
-
-          for( var i = 0; i < gDataComm["links"].length; i++){ 
-            if (gDataComm["links"][i]["source"]["community"] !== 1 || gDataComm["links"][i]["target"]["community"] !== 1) { 
-              gDataComm["links"].splice(i, 1); 
-            }
-          }
-          Graph.graphData(gDataComm);
+        if (settings.community0) {
+          Graph.graphData(getCommunityTree(1));
         } else {
           Graph.graphData(gData);
         }
