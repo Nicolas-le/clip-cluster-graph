@@ -149,15 +149,23 @@
       const Settings = function() {
         this.pruneDepth = 1;
         this.community0 = false;
+        this.communityNumber = 0;
       };
 
       const settings = new Settings();
       const gui = new dat.GUI();
       const controllerOne = gui.add(settings, 'pruneDepth', 1, 2).step(1);
       const controllerTwo = gui.add(settings, 'community0');
+      const controllerThree = gui.add(settings, 'communityNumber', 0, 10).step(1);
+
 
       controllerOne.onChange(updateDepth);
       controllerTwo.onChange(showCommunity);
+      controllerThree.onChange(specifyCommunity);
+
+      function specifyCommunity() {
+        comm_number = settings.communityNumber;
+      }
 
       function updateDepth() {
         depth = settings.pruneDepth;
@@ -165,7 +173,7 @@
 
       function showCommunity(){
         if (settings.community0) {
-          Graph.graphData(getCommunityTree(1));
+          Graph.graphData(getCommunityTree(comm_number));
         } else {
           Graph.graphData(gData);
         }
