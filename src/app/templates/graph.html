@@ -147,16 +147,16 @@
       }
 
       const Settings = function() {
-        this.pruneDepth = 1;
-        this.community0 = false;
-        this.communityNumber = 0;
+        this.linkDepth = 1;
+        this.communityOnOff = false;
+        this.community = 0;
       };
 
       const settings = new Settings();
       const gui = new dat.GUI();
-      const controllerOne = gui.add(settings, 'pruneDepth', 1, 2).step(1);
-      const controllerTwo = gui.add(settings, 'community0');
-      const controllerThree = gui.add(settings, 'communityNumber', 0, 10).step(1);
+      const controllerOne = gui.add(settings, 'linkDepth', 1, 2).step(1);
+      const controllerTwo = gui.add(settings, 'communityOnOff');
+      const controllerThree = gui.add(settings, 'community', 0, 10).step(1);
 
 
       controllerOne.onChange(updateDepth);
@@ -164,15 +164,17 @@
       controllerThree.onChange(specifyCommunity);
 
       function specifyCommunity() {
-        comm_number = settings.communityNumber;
+        comm_number = settings.community;
       }
 
+      comm_number = settings.community;
+      
       function updateDepth() {
-        depth = settings.pruneDepth;
+        depth = settings.linkDepth;
       }
 
       function showCommunity(){
-        if (settings.community0) {
+        if (settings.communityOnOff) {
           Graph.graphData(getCommunityTree(comm_number));
         } else {
           Graph.graphData(gData);
