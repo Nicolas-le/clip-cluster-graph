@@ -17,11 +17,16 @@ def handle_config():
         "output_directory": "./outputs/" + datetime.now().strftime("%d_%m_%Y_%H_%M_%S") + "/",
         "initial_transformation": False,
         "principal_components": 30,
+        "clustering": "mean_shift",
         "k_means_config": {
             "clusters": 150,
             "n_init": 3,
             "max_iter": 3000,
             "random_state": 1
+        },
+        "dbscan_config": {
+            "eps": 0.5, # 2*dim
+            "min_samples": 20 # larger dataset higher, >= dims of data (pca)
         }
     }
 
@@ -41,12 +46,17 @@ if __name__ == "__main__":
         data_preprocessing.get_embeddings(config)
     
     transformed_data_path = "./resources/transformed_embeddings/"+ config["source"] + ".csv"
-
+        
     logging.info("Start PCA...")
     pca.pca_main(transformed_data_path, config)
 
     logging.info("Start Clustering...")
-    clustering.k_means_clustering(config)
+    if config["clustering"] == "kmeans":
+        clustering.k_means_clustering(config)
+    elif config["clustering"] == "dbscan":
+        clustering.dbscan_clustering(config)
+    elif config["clustering"] == "mean_shift":
+        clustering.meanshift_clustering(config)
 
 
     

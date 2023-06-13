@@ -139,7 +139,7 @@ class NpEncoder(json.JSONEncoder):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
     
-data = "./outputs/27_01_2023_07_53_00/"
+data = "./outputs/27_05_2023_15_38_55/"
 
 g = ClusterGraph(data + "clustered_data.csv",
     low_cluster_filter = 20,

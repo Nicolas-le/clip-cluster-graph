@@ -1,11 +1,11 @@
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import pandas as pd
 import logging
 logging.basicConfig(level=logging.INFO)
 
 def split_Xy_scaling(path):
-    df = pd.read_csv(path).drop(columns=["Unnamed: 0"])
+    df = pd.read_csv(path).drop(columns=["Unnamed: 0"]).sample(10000)
 
     X  = df.drop(columns=["video_id", "timestamp"])
     y = df.loc[:, "video_id":"timestamp"]
