@@ -4,50 +4,45 @@ import base64
 from PIL import Image
 from io import BytesIO
 import random
+from pathlib import Path
+import shutil
+
 
 def show_images_cluster(cluster, cluster_video_timestamp, output_dir,  sample_size=5):
 
-    cluster_df = cluster_video_timestamp[cluster_video_timestamp["cluster"]==cluster]
-    sampled_df = cluster_df.sample(n=sample_size, random_state=1)
+    cluster_df = cluster_video_timestamp[cluster_video_timestamp["cluster"]==cluster].sample(frac=1)
 
-    counter = 0
-    
-    for index, image in sampled_df.iterrows():
-        print(counter)
-        thumbnails_path = "./resources/tagesschau/" + image["video_id"] + "/thumbnails.json"
+    counter = 0    
+    for index, image in cluster_df.iterrows():
+        #print(counter)
+        thumbnails_path = "./resources/images/" + image["video_id"].replace(".hdf5","") + "/"
+        image_id = str(int(image["timestamp"]))
+        zeros = ""
+        for i in range(len(image_id),6):
+            zeros = zeros + "0"
+
+        image_id = zeros + image_id
+        image_path = thumbnails_path + image_id  + ".jpg"
+
+        try:
+            shutil.copyfile(image_path, output_dir+str(cluster)+"_"+str(counter)+".jpg")
+            counter += 1
+        except FileNotFoundError:
+            print("File not found. {}".format(image_path))
+            continue
         
-        with open(thumbnails_path) as json_file:
-            data = json.load(json_file)
-            
-            for time in data:
-                if time["t"] == image["timestamp"]:
-                    image_base64 = time["image"]
-
-            """
-            with open(output_dir+"cluster"+str(cluster)+"_"+ str(random.randint(0,5000)) +".png", "wb") as fh:
-                fh.write(base64.b64decode(image_base64))
-            """
-            with open(output_dir+str(cluster)+"_"+str(counter)+".jpg", "wb") as fh:
-                fh.write(base64.b64decode(image_base64))
+        if counter == sample_size:
+            break
         
-        counter += 1
 
 
-"""
-for i in range(1,len(cluster_video_timestamp['cluster'].unique())):
-    show_images_cluster(i)
-"""
-
-cluster_video_timestamp = pd.read_csv("./outputs/27_05_2023_16_14_16/clustered_data.csv")
-
+cluster_video_timestamp = pd.read_csv("./outputs/16_06_2023_20_49_47/clustered_data.csv")
 
 for cluster in cluster_video_timestamp['cluster'].unique():
     print(cluster)
-    show_images_cluster(cluster, cluster_video_timestamp, "./src/app/static/dbscan_clusters/", sample_size=10)
+    #if cluster == -1:
+    #    continue
+    show_images_cluster(cluster, cluster_video_timestamp, "./src/app/static/clusters/", sample_size=10)
 
 
-"""
-for cluster in [109]:
-    print(cluster)
-    show_images_cluster(cluster, cluster_video_timestamp, "./resources/cluster_peak_flucht/", sample_size=200)
-    """
+#show_images_cluster(61, cluster_video_timestamp, "./outputs/clustering_test/", sample_size=500)

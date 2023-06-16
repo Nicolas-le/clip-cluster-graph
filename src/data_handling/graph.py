@@ -18,7 +18,8 @@ class ClusterGraph():
     community_resolution,
     edge_threshold=0.2):
 
-        self.frames_with_clusters = pd.read_csv(frames_with_clusters)
+        self.run_path = frames_with_clusters
+        self.frames_with_clusters = pd.read_csv(frames_with_clusters + "clustered_data.csv")
         self.edge_threshold  = edge_threshold
         self.low_cluster_filter = low_cluster_filter
         self.community_resolution = community_resolution
@@ -126,7 +127,8 @@ class ClusterGraph():
                 self.networkx_graph.nodes[node].update({"community": comm_number})
 
     def save_to_json(self):
-        with open(data + "/graph_communities.json", "w") as f:
+        print("saving grpah")
+        with open(self.run_path + "/graph_communities.json", "w") as f:
             json.dump(nx.node_link_data(self.networkx_graph), f, cls=NpEncoder)
 
 class NpEncoder(json.JSONEncoder):
@@ -138,18 +140,18 @@ class NpEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
-    
-data = "./outputs/27_05_2023_15_38_55/"
+
+"""
+data = "outputs/15_06_2023_16_37_32/"
 
 g = ClusterGraph(data + "clustered_data.csv",
-    low_cluster_filter = 20,
+    low_cluster_filter = 5,
     community_resolution = 1.2,
-    edge_threshold=0.1
+    edge_threshold=0
     )
 
 g.save_to_json()
-
-
+"""
 
 
 

@@ -9,25 +9,31 @@ logging.basicConfig(level=logging.INFO)
 import data_preprocessing
 import pca
 import clustering
+from graph import ClusterGraph
 
 def handle_config():
     config = {
-        "source": "tagesschau",
-        "data_source": "./resources/tagesschau/",
+        "embeddings": "./resources/embeddings/",
+        "images": "./resources/images/",
+        "embedding_algorithm": "ImageBind",
         "output_directory": "./outputs/" + datetime.now().strftime("%d_%m_%Y_%H_%M_%S") + "/",
         "initial_transformation": False,
-        "principal_components": 30,
-        "clustering": "mean_shift",
+        "principal_components": 40,
+        "clustering": "hdbscan",
         "k_means_config": {
-            "clusters": 150,
+            "clusters": 20,
             "n_init": 3,
             "max_iter": 3000,
             "random_state": 1
         },
         "dbscan_config": {
-            "eps": 0.5, # 2*dim
-            "min_samples": 20 # larger dataset higher, >= dims of data (pca)
+            "eps": 1, # 2*dim
+            "min_samples": 15 # larger dataset higher, >= dims of data (pca)
+        },
+        "hdbscan_config":{
+            "min_cluster_size": 100
         }
+
     }
 
     os.mkdir(config["output_directory"])
@@ -44,8 +50,8 @@ if __name__ == "__main__":
     if config["initial_transformation"]:
         logging.info("Data Transformation...")
         data_preprocessing.get_embeddings(config)
-    
-    transformed_data_path = "./resources/transformed_embeddings/"+ config["source"] + ".csv"
+
+    transformed_data_path = "./resources/transformed_embeddings/"+ config["embedding_algorithm"] + ".csv"
         
     logging.info("Start PCA...")
     pca.pca_main(transformed_data_path, config)
@@ -57,7 +63,20 @@ if __name__ == "__main__":
         clustering.dbscan_clustering(config)
     elif config["clustering"] == "mean_shift":
         clustering.meanshift_clustering(config)
+    elif config["clustering"] == "hdbscan":
+        clustered_df = clustering.hdbscan_clustering(config)
 
+    clustered_df = clustered_df[clustered_df["cluster"] != -1]
+    clustered_df.to_csv(config["output_directory"] + "clustered_data.csv")
+
+    g = ClusterGraph(config["output_directory"],
+        low_cluster_filter = 1,
+        community_resolution = 1.2,
+        edge_threshold=0
+        )
+    
+    g.save_to_json()
+    
 
     
 
