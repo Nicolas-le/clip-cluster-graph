@@ -31,7 +31,7 @@ def handle_config():
             "min_samples": 15 # larger dataset higher, >= dims of data (pca)
         },
         "hdbscan_config":{
-            "min_cluster_size": 100
+            "min_cluster_size": 15
         }
 
     }
@@ -64,14 +64,20 @@ if __name__ == "__main__":
     elif config["clustering"] == "mean_shift":
         clustering.meanshift_clustering(config)
     elif config["clustering"] == "hdbscan":
-        clustered_df = clustering.hdbscan_clustering(config)
+        clustered_df, columns_for_clustering = clustering.hdbscan_clustering(config)
 
     clustered_df = clustered_df[clustered_df["cluster"] != -1]
     clustered_df.to_csv(config["output_directory"] + "clustered_data.csv")
 
+    logging.info("Finished Clustering for all videos...")
+    
+    #with open(config["output_directory"]+"/cluster_centroids.json", 'w') as convert_file:
+    #    convert_file.write(json.dumps(cluster_centroids))
+
     g = ClusterGraph(config["output_directory"],
         low_cluster_filter = 1,
         community_resolution = 1.2,
+        columns_for_clustering= columns_for_clustering,
         edge_threshold=0
         )
     

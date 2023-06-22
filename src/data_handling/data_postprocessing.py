@@ -25,7 +25,7 @@ def show_images_cluster(cluster, cluster_video_timestamp, output_dir,  sample_si
         image_path = thumbnails_path + image_id  + ".jpg"
 
         try:
-            shutil.copyfile(image_path, output_dir+str(cluster)+"_"+str(counter)+".jpg")
+            shutil.copyfile(image_path, output_dir + image["video_id"]+ "_" + str(cluster)+"_"+str(counter)+".jpg")
             counter += 1
         except FileNotFoundError:
             print("File not found. {}".format(image_path))
@@ -36,13 +36,14 @@ def show_images_cluster(cluster, cluster_video_timestamp, output_dir,  sample_si
         
 
 
-cluster_video_timestamp = pd.read_csv("./outputs/16_06_2023_20_49_47/clustered_data.csv")
+cluster_video_timestamp = pd.read_csv("./outputs/21_06_2023_12_01_27/clustered_data.csv")
 
-for cluster in cluster_video_timestamp['cluster'].unique():
-    print(cluster)
-    #if cluster == -1:
-    #    continue
-    show_images_cluster(cluster, cluster_video_timestamp, "./src/app/static/clusters/", sample_size=10)
+for video_id in cluster_video_timestamp["video_id"].unique():
+    game_clusters = cluster_video_timestamp[cluster_video_timestamp["video_id"]==video_id].sample(frac=1)
 
+    print(video_id)
+    for cluster in game_clusters['cluster'].unique():
+        show_images_cluster(cluster, game_clusters, "./src/app/static/clusters/" , sample_size=10)
 
+    print("-"*100)
 #show_images_cluster(61, cluster_video_timestamp, "./outputs/clustering_test/", sample_size=500)

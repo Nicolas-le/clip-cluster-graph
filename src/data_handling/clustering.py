@@ -3,6 +3,8 @@ from sklearn.cluster import KMeans, DBSCAN, OPTICS, MeanShift
 import hdbscan
 import logging
 logging.basicConfig(level=logging.INFO)
+from collections import defaultdict
+from scipy.spatial import distance
 
 def k_means_clustering(config):
     pca_transformed_df = pd.read_csv(config["output_directory"]+ config["embedding_algorithm"] + "_pca_transformed_data.csv")
@@ -84,17 +86,36 @@ def meanshift_clustering(config):
     only_cluster_df.to_csv(config["output_directory"] + "clustered_data.csv")
 
 def hdbscan_clustering(config):
-    pca_transformed_df = pd.read_csv(config["output_directory"]+ config["embedding_algorithm"] + "_pca_transformed_data.csv")
-    columns_for_clustering = [e for e in list(pca_transformed_df.columns) if e not in ('Unnamed: 0', "video_id", "timestamp")]
-
-    clustering = hdbscan.HDBSCAN(min_cluster_size=config["hdbscan_config"]["min_cluster_size"]).fit_predict(pca_transformed_df[columns_for_clustering])
-
-    pca_transformed_df.loc[:,"cluster"] = clustering
-
-    only_cluster_df = pca_transformed_df.drop(columns=columns_for_clustering)
-
-    logging.info("Finished Clustering")
-    logging.info(only_cluster_df["cluster"].value_counts())
-
-    return only_cluster_df
     
+    pca_transformed_df = pd.read_csv(config["output_directory"]+ config["embedding_algorithm"] + "_pca_transformed_data.csv")
+    concatenated_df = pd.DataFrame()
+    cluster_centroids = defaultdict(lambda: defaultdict(list))
+
+    for game_title in pca_transformed_df['video_id'].unique():
+
+        game_df = pca_transformed_df.loc[pca_transformed_df["video_id"] == game_title]
+
+        columns_for_clustering = [e for e in list(game_df.columns) if e not in ('Unnamed: 0', "video_id", "timestamp")]
+        clustering = hdbscan.HDBSCAN(min_cluster_size=config["hdbscan_config"]["min_cluster_size"]).fit_predict(game_df[columns_for_clustering])
+
+        game_df.loc[:,"cluster"] = clustering
+
+        cluster_centroids = get_centroids(cluster_centroids, game_df, game_title, columns_for_clustering)
+        #only_cluster_df = game_df.drop(columns=columns_for_clustering)
+        only_cluster_df = game_df
+        
+        concatenated_df = pd.concat([concatenated_df, only_cluster_df], ignore_index=True)
+
+        logging.info("Finished Clustering")
+        logging.info(only_cluster_df["cluster"].value_counts())
+
+    return concatenated_df, columns_for_clustering
+
+def get_centroids(cluster_centroids, game_df, game_title, columns_for_clustering):
+
+    for cluster in game_df['cluster'].unique():
+        game_clusters = game_df.loc[game_df["cluster"] == cluster]  
+        cluster_centroids[game_title][int(cluster)] = list(game_clusters[columns_for_clustering].mean())
+    
+    return cluster_centroids
+

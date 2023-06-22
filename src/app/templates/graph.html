@@ -103,7 +103,7 @@
         })
         (document.getElementById('3d-graph'))
         .nodeThreeObject(({ id }) => {
-          const imgTexture = new THREE.TextureLoader().load(`./static/clusters/${id}_0.jpg`);
+          const imgTexture = new THREE.TextureLoader().load(`./static/clusters/${id}_1.jpg`);
           const material = new THREE.SpriteMaterial({ map: imgTexture });
           const sprite = new THREE.Sprite(material); 
           sprite.scale.set(25, 15);
@@ -123,6 +123,7 @@
         
         for (let i = 0; i < 10; i++) {
           plan = new THREE.PlaneGeometry(25, 15, 1, 1);
+          console.log(id.id);
           var map = new THREE.TextureLoader().load( `./static/clusters/${id.id}_${i}.jpg`);
           var material = new THREE.MeshBasicMaterial( { map: map } );
           const mesh = new THREE.Mesh(plan , material);
