@@ -5,15 +5,70 @@
   <script src="//unpkg.com/3d-force-graph"></script>
   <script src="//unpkg.com/dat.gui"></script>
   <!--<script src="../../dist/3d-force-graph.js"></script>-->
-  <style>
-    .clickable { cursor: unset !important }
-  </style>
+  <link rel="stylesheet" type="text/css" href="./static/graph.css">
 </head>
 
 <body>
+  <div id="overlay">
+    <div id="imageContainer"></div>
+  </div>
+  
   <div id="3d-graph"></div>
 
+
     <script>
+
+      // Function to open the overlay and show the images
+      function openOverlay(images) {
+
+        const imageContainer = document.getElementById('imageContainer');
+        imageContainer.innerHTML = ''; // Clear any previous images
+
+        // Create <img> elements and append them to the image container
+        images.forEach(url => {
+          const img = document.createElement('img');
+          img.src = url;
+          imageContainer.appendChild(img);
+        });
+
+        document.getElementById('overlay').classList.add('two-column'); // Add the class for two-column layout
+        document.getElementById('overlay').style.display = 'flex';
+      }
+
+      // Function to close the overlay
+      function closeOverlay() {
+        document.getElementById('overlay').style.display = 'none';
+      }
+
+      // Function to handle right-click on node
+      function handleNodeRightClick(node) {
+        if (!showImages) {
+          var imageUrls = [];
+          for (let i = 0; i < 80; i++) {
+            console.log(node.id);
+            var imageUrl = `./static/clusters/${node.id}_${i}.jpg`;
+            var imageExists = LinkCheck(imageUrl);
+            if (imageExists) {
+              console.log(node.id);
+              imageUrls.push(imageUrl);
+            } else {
+              break; // Break the loop if an image does not exist
+            }
+          }
+          openOverlay(imageUrls);
+          showImages = true;
+        } else {
+          closeOverlay();
+          showImages = false;
+        }
+      }
+
+      function LinkCheck(url){
+          var http = new XMLHttpRequest();
+          http.open('HEAD', url, false);
+          http.send();
+          return http.status!=404;
+      }
 
       var gData = {{graph |tojson| safe}};
 
@@ -92,18 +147,10 @@
             collap = false;
           }
         })
-        .onNodeRightClick(node => {
-          if (!showImages) {
-            showClusterImages(node);
-            showImages = true;
-          } else {
-            removeDisplay(node);
-            showImages = false;
-          }
-        })
+        .onNodeRightClick(node => handleNodeRightClick(node))
         (document.getElementById('3d-graph'))
         .nodeThreeObject(({ id }) => {
-          const imgTexture = new THREE.TextureLoader().load(`./static/clusters/${id}_1.jpg`);
+          const imgTexture = new THREE.TextureLoader().load(`./static/clusters/${id}_0.jpg`);
           const material = new THREE.SpriteMaterial({ map: imgTexture });
           const sprite = new THREE.Sprite(material); 
           sprite.scale.set(25, 15);
@@ -113,35 +160,6 @@
       const linkForce = Graph
         .d3Force('link')
         .distance(link => (((1-link.weight)*500)*((1-link.weight)*500))/1000);
-
-      function showClusterImages(id) {
-        var yAxis = 35;
-        var xAxis = 41;
-
-        Graph.scene().add(Graph.camera());
-        var meshes = {};
-        
-        for (let i = 0; i < 10; i++) {
-          plan = new THREE.PlaneGeometry(25, 15, 1, 1);
-          console.log(id.id);
-          var map = new THREE.TextureLoader().load( `./static/clusters/${id.id}_${i}.jpg`);
-          var material = new THREE.MeshBasicMaterial( { map: map } );
-          const mesh = new THREE.Mesh(plan , material);
-          meshes[i] = mesh;
-        }
-
-        for(var p in meshes){
-          Graph.camera().add(meshes[p]);
-          meshes[p].position.set(xAxis,yAxis,-100);
-          yAxis -= 17;
-
-          if (p == 4){
-            yAxis = 35;
-            xAxis = 68;
-          }
-        }
-
-      }
 
       function removeDisplay(){
         Graph.scene().remove(Graph.camera());
@@ -181,8 +199,6 @@
           Graph.graphData(gData);
         }
       }
-
-
 
   </script>
 </body>
