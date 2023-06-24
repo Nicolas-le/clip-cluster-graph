@@ -10,3 +10,10 @@ def  prepare_graph_data(path):
     d.pop("graph")
     
     return d
+
+def load_captions(path):
+    with open(path) as f:
+        d = json.load(f)
+    
+    return d
+

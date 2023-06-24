@@ -11,12 +11,20 @@
 <body>
   <div id="overlay">
     <div id="imageContainer"></div>
+    <div id="textContainer"></div>
   </div>
+
+
   
   <div id="3d-graph"></div>
 
 
     <script>
+       // loading the json files
+      var gData = {{graph |tojson| safe}};
+      var captionData = {{captions |tojson| safe}};
+
+      console.log(captionData);
 
       // Function to open the overlay and show the images
       function openOverlay(images) {
@@ -24,13 +32,33 @@
         const imageContainer = document.getElementById('imageContainer');
         imageContainer.innerHTML = ''; // Clear any previous images
 
+        const textContainer = document.getElementById('textContainer');
+        textContainer.innerHTML = ''; // Clear any previous images
+
         // Create <img> elements and append them to the image container
         images.forEach(url => {
           const img = document.createElement('img');
           img.src = url;
           imageContainer.appendChild(img);
-        });
 
+          const textElement = document.createElement('p');
+          var image_url = url.replace('./static/clusters/','');
+          var image_caption = captionData[image_url]
+          textElement.textContent = image_caption;
+          console.log(textElement);
+
+          //imageContainer.appendChild(textElement);
+          // Add event listener for hovering over the image
+          img.addEventListener('mouseenter', () => {
+            textContainer.appendChild(textElement); // Append text element to the image container
+          });
+
+          // Add event listener for moving away from the image
+          img.addEventListener('mouseleave', () => {
+            textContainer.removeChild(textElement); // Remove text element from the image container
+          });
+        });
+        
         document.getElementById('overlay').classList.add('two-column'); // Add the class for two-column layout
         document.getElementById('overlay').style.display = 'flex';
       }
@@ -69,8 +97,6 @@
           http.send();
           return http.status!=404;
       }
-
-      var gData = {{graph |tojson| safe}};
 
       for (const [key, value] of Object.entries(gData["nodes"])) {
           value["childLinks"] = [];
